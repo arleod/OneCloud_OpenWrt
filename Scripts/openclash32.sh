@@ -41,6 +41,6 @@ ls -l files/etc/openclash/core/clash_meta
 echo ">>> 下载地理数据（失败不中断，刷好后可在界面里再下载）"
 wget -O files/etc/openclash/GeoIP.dat    --timeout=60 --tries=2 "${GEOIP_URL}"    || { echo "  GeoIP 失败, 跳过";        rm -f files/etc/openclash/GeoIP.dat; }
 wget -O files/etc/openclash/GeoSite.dat  --timeout=60 --tries=2 "${GEOSITE_URL}"  || { echo "  GeoSite 失败, 跳过";      rm -f files/etc/openclash/GeoSite.dat; }
-wget -O files/etc/openclash/Country.mmdb --timeout=60 --tries=2 "${GEOS_MMDB_URL:-$GEO_MMDB_URL}" || { echo "  Country.mmdb 失败, 跳过"; rm -f files/etc/openclash/Country.mmdb; }
+wget -O files/etc/openclash/Country.mmdb --timeout=60 --tries=2 "${GEO_MMDB_URL}" || { echo "  Country.mmdb 失败, 跳过"; rm -f files/etc/openclash/Country.mmdb; }
 
 ls -lh files/etc/openclash/core files/etc/openclash
