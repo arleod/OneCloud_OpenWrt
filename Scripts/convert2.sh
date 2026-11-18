@@ -1,4 +1,6 @@
-sudo apt install android-sdk-libsparse-utils
+sudo apt-get update -qq || true
+sudo apt-get install -y android-sdk-libsparse-utils || true
+command -v img2simg || { echo "ERROR: img2simg 不可用，直刷包无法生成"; exit 1; }
 ver="v0.3.2"
 curl -L -o ./AmlImg https://github.com/rmoyulong/AmlImg/releases/download/$ver/AmlImg_${ver}_linux_amd64
 chmod +x ./AmlImg
