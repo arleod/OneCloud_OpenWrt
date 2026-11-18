@@ -36,3 +36,9 @@ cd $GITHUB_WORKSPACE/openwrt
 sed -i 's/+ath9k-htc-firmware//g' package/kernel/mac80211/ath.mk
 echo ">>> ath9k-htc 依赖修复结果:"
 grep -n "KernelPackage/ath9k-htc" -A4 package/kernel/mac80211/ath.mk | head -8
+# === 兜底：erofs-utils 源码包从 kernel.org snapshot 下载会 404，改用仓库内自带包 ===
+cd $GITHUB_WORKSPACE/openwrt
+mkdir -p dl
+cp -f $GITHUB_WORKSPACE/Scripts/dl/erofs-utils-1.8.10.tar.gz dl/erofs-utils-1.8.10.tar.gz
+sha256sum dl/erofs-utils-1.8.10.tar.gz
+echo ">>> dl 目录:"; ls -l dl/ | head -5
