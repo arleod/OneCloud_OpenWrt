@@ -30,3 +30,9 @@ merge_package main https://github.com/VIKINGYFY/packages  feeds/packages/net sin
 cd package
 $GITHUB_WORKSPACE/Scripts/Packages.sh
 $GITHUB_WORKSPACE/Scripts/Handles.sh
+
+# === 修复：ath9k-htc 依赖的 ath9k-htc-firmware 包在本源码树中不存在，会导致该驱动被 defconfig 静默丢弃 ===
+cd $GITHUB_WORKSPACE/openwrt
+sed -i 's/+ath9k-htc-firmware//g' package/kernel/mac80211/ath.mk
+echo ">>> ath9k-htc 依赖修复结果:"
+grep -n "KernelPackage/ath9k-htc" -A4 package/kernel/mac80211/ath.mk | head -8
