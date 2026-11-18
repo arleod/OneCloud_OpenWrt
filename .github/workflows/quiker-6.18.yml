@@ -96,7 +96,14 @@ jobs:
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix libfuse-dev libxml2-dev python3-setools python3-setuptools libffi-dev pkg-config lib32z1-dev libpcre2-dev
-          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo bash -c 'printf "Acquire::http::Timeout \"30\";\nAcquire::https::Timeout \"30\";\nAcquire::Retries \"3\";\n" > /etc/apt/apt.conf.d/99net-timeout'
+          for i in 1 2 3; do
+            echo ">>> immortalwrt 初始化脚本 第 $i 次尝试"
+            if sudo timeout 900 bash -c 'bash <(curl -fsSL --max-time 90 --retry 2 https://build-scripts.immortalwrt.org/init_build_environment.sh)'; then
+              echo ">>> 初始化成功"; break
+            fi
+            echo ">>> 第 $i 次失败或超时(15分钟)，10 秒后重试"; sleep 10
+          done
           
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
