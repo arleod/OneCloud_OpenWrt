@@ -42,3 +42,11 @@ mkdir -p dl
 cp -f $GITHUB_WORKSPACE/Scripts/dl/erofs-utils-1.8.10.tar.gz dl/erofs-utils-1.8.10.tar.gz
 sha256sum dl/erofs-utils-1.8.10.tar.gz
 echo ">>> dl 目录:"; ls -l dl/ | head -5
+
+# === 修复：LEDE scripts/json_overview_image_info.py 在最后生成 profiles.json 时
+# 因 make 返回多行而 ValueError: too many values to unpack，导致镜像已生成却整体失败 ===
+cd $GITHUB_WORKSPACE/openwrt
+cp -f $GITHUB_WORKSPACE/Scripts/json_overview_image_info.py scripts/json_overview_image_info.py
+chmod +x scripts/json_overview_image_info.py
+echo ">>> json_overview 补丁已应用:"
+grep -n "def query_val" scripts/json_overview_image_info.py
