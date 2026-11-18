@@ -259,19 +259,7 @@ jobs:
           make defconfig
           make download -j$(( $(nproc) * 2 ))
           find dl -size -1k -exec rm -f {} \;
-          echo ">>> 校验 9 个网卡/无线相关包是否真的被选中(=y)"
-          missing=0
-          for p in kmod-usb-net-asix-ax88179 kmod-ath9k-htc kmod-mac80211 kmod-cfg80211 wpad-mbedtls iw iwinfo wireless-regdb usbutils; do
-            if grep -q "^CONFIG_PACKAGE_$p=y" .config; then echo "  OK   $p"; else echo "  MISS $p"; missing=$((missing+1)); fi
-          done
-          if [ "$missing" != "0" ]; then echo "ERROR: 有 $missing 个驱动包未被选中, 中止以免白编 4 小时"; exit 1; fi
-          echo ">>> 预编译 po2lmo（luci-app-openclash 编译翻译必需；不预建会因并行顺序随机报 command not found）"
-          mkdir -p $GITHUB_WORKSPACE/openwrt/staging_dir/hostpkg/bin
-          make -C feeds/luci/modules/luci-base/src clean po2lmo || { echo "ERROR: po2lmo 源码编译失败"; exit 1; }
-          install -m0755 feeds/luci/modules/luci-base/src/po2lmo $GITHUB_WORKSPACE/openwrt/staging_dir/hostpkg/bin/po2lmo || { echo "ERROR: po2lmo 安装失败"; exit 1; }
-          test -x $GITHUB_WORKSPACE/openwrt/staging_dir/hostpkg/bin/po2lmo || { echo "ERROR: po2lmo 不可执行"; exit 1; }
-          ls -l $GITHUB_WORKSPACE/openwrt/staging_dir/hostpkg/bin/po2lmo
-          echo ">>> po2lmo 就绪"
+          bash $GITHUB_WORKSPACE/Scripts/prebuild.sh
 
     - name: 编译固件
       working-directory: ./openwrt
