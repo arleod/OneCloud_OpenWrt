@@ -95,15 +95,16 @@ jobs:
           sudo bash -c 'printf "Acquire::http::Timeout \"30\";\nAcquire::https::Timeout \"30\";\nAcquire::Retries \"3\";\n" > /etc/apt/apt.conf.d/99net-timeout'
           echo ">>> [1/3] 更新软件源索引"
           sudo timeout 600 apt-get -yqq update || echo ">>> WARN: update 超时, 继续"
-          echo ">>> [2/3] 先装小体积关键工具(dos2unix/file/bc/cpio)"
-          sudo timeout 900 env DEBIAN_FRONTEND=noninteractive apt-get -yqq install dos2unix file bc cpio rsync curl wget || { echo "ERROR: 基础工具安装失败"; exit 1; }
-          echo ">>> [3/3] 安装 LEDE 编译依赖(30 分钟硬超时, 失败不中断)"
-          sudo timeout 1800 env DEBIAN_FRONTEND=noninteractive apt-get -yqq install \
-            build-essential asciidoc binutils bzip2 gawk gettext git libncurses-dev \
-            zlib1g-dev patch python3 unzip subversion flex bison libssl-dev texinfo \
-            libglib2.0-dev xmlto qemu-utils libelf-dev autoconf automake libtool \
-            autopoint device-tree-compiler gperf swig libfuse-dev libxml2-dev \
-            python3-setuptools libffi-dev pkg-config libpcre2-dev ccache || echo ">>> WARN: 部分依赖未装, 由关键工具校验兜底"
+          echo ">>> [2/3] 先装小工具 + ncurses(编译预检必需), 这一批必须成功"
+          sudo timeout 600 env DEBIAN_FRONTEND=noninteractive apt-get -yqq install dos2unix file bc cpio rsync curl wget libncurses-dev libncurses5-dev libncursesw5-dev || echo ">>> WARN: 第一批超时"
+          echo ">>> [3/3] 其余依赖分批安装, 每批独立超时, 单批失败不拖累其他"
+          for grp in "build-essential binutils patch diffutils" "libssl-dev zlib1g-dev libelf-dev" "bison flex gawk gettext" "autoconf automake libtool autopoint" "subversion swig gperf" "device-tree-compiler ccache" "python3-setuptools python3-dev libffi-dev pkg-config" "libpcre2-dev libxml2-dev libfuse-dev" "unzip bzip2 xz-utils git"; do
+            echo "  -> 安装: $grp"
+            sudo timeout 240 env DEBIAN_FRONTEND=noninteractive apt-get -yqq install $grp || echo "  WARN: 该批未装完, 跳过"
+          done
+          echo ">>> 校验 ncurses 头文件"
+          if [ -f /usr/include/ncurses.h ] || [ -f /usr/include/ncursesw/ncurses.h ]; then echo ">>> ncurses.h 已就位"; else echo "ERROR: ncurses.h 仍然缺失"; exit 1; fi
+          ls -1 /usr/lib/x86_64-linux-gnu/libncurses*.so* 2>/dev/null | head -3
           for t in gcc g++ make git python3 rsync wget curl unzip bzip2 patch flex bison swig dos2unix; do
             command -v $t >/dev/null 2>&1 || { echo "ERROR: 关键编译工具缺失 -> $t"; exit 1; }
           done
