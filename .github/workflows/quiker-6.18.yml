@@ -89,21 +89,24 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-          sudo -E apt -yqq purge firefox
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev libxml2-dev python3-setools python3-setuptools libffi-dev pkg-config lib32z1-dev libpcre2-dev
-          sudo bash -c 'printf "Acquire::http::Timeout \"30\";\nAcquire::https::Timeout \"30\";\nAcquire::Retries \"3\";\n" > /etc/apt/apt.conf.d/99net-timeout'
-          for i in 1 2 3; do
-            echo ">>> immortalwrt 初始化脚本 第 $i 次尝试"
-            if sudo timeout 900 bash -c 'bash <(curl -fsSL --max-time 90 --retry 2 https://build-scripts.immortalwrt.org/init_build_environment.sh)'; then
-              echo ">>> 初始化成功"; break
-            fi
-            echo ">>> 第 $i 次失败或超时(15分钟)，10 秒后重试"; sleep 10
+          sudo -E apt-get -yqq purge firefox
+          sudo -E apt-get -yqq update
+          sudo -E apt-get -yqq autoremove --purge || true
+          sudo -E apt-get -yqq clean
+          sudo bash -c 'printf "Acquire::http::Timeout \"20\";\nAcquire::https::Timeout \"20\";\nAcquire::Retries \"2\";\n" > /etc/apt/apt.conf.d/99net-timeout'
+          echo ">>> 安装 LEDE 编译依赖(内联清单, 不使用第三方脚本, 15 分钟硬超时)"
+          sudo timeout 900 env DEBIAN_FRONTEND=noninteractive apt-get -yqq install \
+            build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev \
+            libz-dev patch python3 unzip zlib1g-dev libc6-dev-i386 subversion flex \
+            gcc-multilib p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto \
+            qemu-utils libelf-dev autoconf automake libtool autopoint \
+            device-tree-compiler g++-multilib antlr3 gperf wget curl swig rsync \
+            dos2unix libfuse-dev libxml2-dev python3-setuptools libffi-dev \
+            pkg-config lib32z1-dev libpcre2-dev bc file ccache cpio bison || echo ">>> WARN: 部分依赖未能安装, 继续关键工具校验"
+          for t in gcc g++ make git python3 rsync wget curl unzip bzip2 patch flex bison swig; do
+            command -v $t >/dev/null 2>&1 || { echo "ERROR: 关键编译工具缺失 -> $t"; exit 1; }
           done
+          echo ">>> 关键编译工具校验通过"
           
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
